@@ -1,8 +1,7 @@
 require 'monitor'
 require 'concurrent'
-require 'redis'
 
-class Queue
+class ConnectionQueue
   attr_reader :max_size
 
   def initialize(max_size = 0, &block)

@@ -12,5 +12,6 @@ task :run do
 end
 
 task :test do
-  ruby 'test/*'
+  ruby 'test/connection_queue_test.rb'
+  ruby 'test/redis_pool_test.rb'
 end

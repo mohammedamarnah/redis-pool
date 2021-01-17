@@ -1,4 +1,5 @@
-require './redis_pool/queue.rb'
+require 'redis'
+require_relative './redis_pool/connection_queue'
 
 class RedisPool
   DEFAULT_POOL_OPTS = {
@@ -20,7 +21,7 @@ class RedisPool
     @connection_timeout = options[:connection_timeout]
     @idle_timeout = options[:idle_timeout]
 
-    @available = Queue.new(@max_size, &redis_creation_block)
+    @available = ConnectionQueue.new(@max_size, &redis_creation_block)
     @key = :"pool-#{@available.object_id}"
     @key_count = :"pool-#{@available.object_id}-count"
   end
