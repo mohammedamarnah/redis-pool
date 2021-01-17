@@ -1,83 +1,74 @@
-require 'redis'
-require 'concurrent'
-
-require_relative 'reaper.rb'
-require_relative 'queue.rb'
+require './redis_pool/queue.rb'
 
 class RedisPool
-  class ConnectionTimeoutError < StandardError; end
+  DEFAULT_POOL_OPTS = {
+    max_size: 5,
+    connection_timeout: 5,
+    idle_timeout: 100
+  }.freeze
 
-  attr_accessor :automatic_reconnect, :checkout_timeout
-  attr_reader :redis_spec, :pool_spec, :size, :reaper
+  DEFAULT_REDIS_CONFIG = { host: 'localhost', port: 6379 }.freeze
 
-  DEFAULT_REDIS_SPEC = {
-    host: 'localhost',
-    port: 6379
-  }
+  attr_reader :max_size, :connection_timeout, :idle_timeout
 
-  def initialize(redis_spec = {}, pool_spec = {})
-    @redis_spec = DEFAULT_REDIS_SPEC.merge(redis_spec)
+  def initialize(options = {}, redis_config = {})
+    options = DEFAULT_POOL_OPTS.merge(options)
 
-    @size = (pool_spec[:size] && pool_spec[:size].to_i) || 5
+    @redis_config = DEFAULT_REDIS_CONFIG.merge(redis_config)
 
-    @thread_cached_conns = Concurrent::Map.new(initial_capacity: @size)
+    @max_size = options[:max_size]
+    @connection_timeout = options[:connection_timeout]
+    @idle_timeout = options[:idle_timeout]
 
-    @connections = []
-    @automatic_reconnect = pool_spec[:automatic_reconnect] || true
+    @available = Queue.new(@max_size, &redis_creation_block)
+    @key = :"pool-#{@available.object_id}"
+    @key_count = :"pool-#{@available.object_id}-count"
+  end
 
-    @now_connecting = 0
+  def with(timeout = nil)
+    Thread.handle_interrupt(Exception => :never) do
+      conn = checkout(timeout)
+      begin
+        Thread.handle_interrupt(Exception => :immediate) do
+          yield conn
+        end
+      ensure
+        checkin
+      end
+    end
+  end
+  alias with_conn with
+  alias with_connection with
 
-    @threads_blocking_new_connections = 0
+  def checkout(timeout = nil)
+    if current_thread[@key]
+      current_thread[@key_count] += 1
+      current_thread[@key]
+    else
+      current_thread[@key_count] = 1
+      current_thread[@key] = @available.poll(timeout || @connection_timeout)
+    end
+  end
 
-    @available = ConnectionLeasingQueue.new(self)
+  def checkin
+    raise 'no connections are checked out' unless current_thread[@key]
 
-    @lock_thread = false
+    if current_thread[@key_count] == 1
+      @available.add current_thread[@key]
+      current_thread[@key] = nil
+      current_thread[@key_count] = nil
+    else
+      current_thread[@key_count] -= 1
+    end
+  end
 
-    reaping_frequency = pool_spec[:reaping_frequency]
-    @reaper = Repear.new(self, reaping_frequency && reaping_frequency.to_f)
-    @reaper.run
+  private
+
+  def current_thread
+    ::Thread.current
+  end
+
+  def redis_creation_block
+    -> { Redis.new(@redis_config) }
   end
 end
-
-# r = RedisPool.new
-
-#   def method_missing(meth, *args)
-#     run { |conn| conn.send(meth, *args) }
-#   end
-#
-#   def run
-#     begin
-#       if @pool.empty?
-#         open_new_connection()
-#       end
-#       conn = nil
-#       Timeout::timeout(2, ConnectionTimeoutError) do
-#         conn = @pool.pop
-#       end
-#       @open_connections += 1
-#       yield conn
-#     ensure
-#       @open_connections -= 1
-#       @pool << conn if conn
-#     end
-#   end
-#
-#   def open_new_connection
-#     if @open_connections < max_pool_size
-#       @pool << Redis.new(@redis_spec)
-#     end
-#   end
-#
-#   def close_idle_connections
-#     while @pool.size() > @min_pool_size
-#       @pool.pop
-#     end
-#   end
-# end
-#
-# r = RedisWrapper.new
-# while true
-#   val = r.get('bla')
-#   puts val
-#   sleep 0.05
-# end
