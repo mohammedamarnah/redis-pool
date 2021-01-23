@@ -30,7 +30,7 @@ class ConnectionQueue
   # is not available, waits for +timeout+ until a connection is
   # available or raises a TimeoutError.
   #
-  def poll(timeout = nil)
+  def poll(timeout = 5)
     t0 = Concurrent.monotonic_time
     elapsed = 0
     synchronize do
@@ -81,11 +81,10 @@ class ConnectionQueue
   end
 
   def create_connection
-    if @created < @max_size
-      conn = @create_block.call
-      @created += 1
-      conn
-    end
+    return unless @created < @max_size
+
+    conn = @create_block.call
+    @created += 1
+    conn
   end
 end
-

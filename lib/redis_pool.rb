@@ -66,7 +66,7 @@ class RedisPool
   private
 
   def current_thread
-    ::Thread.current
+    Thread.current
   end
 
   def redis_creation_block
