@@ -1,16 +1,19 @@
 require 'redis'
 require_relative './redis_pool/connection_queue'
+require_relative './redis_pool/reaper'
 
 class RedisPool
   DEFAULT_POOL_OPTS = {
     max_size: 5,
     connection_timeout: 5,
-    idle_timeout: 100
+    idle_timeout: 100,
+    reaping_frequency: 300,
   }.freeze
 
   DEFAULT_REDIS_CONFIG = { host: 'localhost', port: 6379 }.freeze
 
-  attr_reader :max_size, :connection_timeout, :idle_timeout
+  attr_reader :max_size, :connection_timeout, :idle_timeout,
+              :reaping_frequency, :available
 
   def initialize(options = {}, redis_config = {})
     options = DEFAULT_POOL_OPTS.merge(options)
@@ -20,10 +23,15 @@ class RedisPool
     @max_size = options[:max_size]
     @connection_timeout = options[:connection_timeout]
     @idle_timeout = options[:idle_timeout]
+    @reaping_frequency = options[:reaping_frequency]
 
     @available = ConnectionQueue.new(@max_size, &redis_creation_block)
+    @reaper = Reaper.new(self, @reaping_frequency, @idle_timeout)
+
     @key = :"pool-#{@available.object_id}"
     @key_count = :"pool-#{@available.object_id}-count"
+
+    @reaper.reap
   end
 
   def with(timeout = nil)
@@ -31,7 +39,7 @@ class RedisPool
       conn = checkout(timeout)
       begin
         Thread.handle_interrupt(Exception => :immediate) do
-          yield conn
+          yield conn.first
         end
       ensure
         checkin
@@ -60,6 +68,12 @@ class RedisPool
       current_thread[@key_count] = nil
     else
       current_thread[@key_count] -= 1
+    end
+  end
+
+  def stats(pretty_print = false)
+    @available.queue.each do |conn|
+      puts conn.last
     end
   end
 

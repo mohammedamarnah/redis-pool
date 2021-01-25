@@ -1,8 +1,15 @@
 require 'monitor'
 require 'concurrent'
 
+##
+# A thread-safe implementation of a connection queue.
+# Supports adding, removing, and polling a connection
+# synchronously, and doesn't create more than `max_size`
+# elements.
+# All connections are created lazily (only when needed).
+#
 class ConnectionQueue
-  attr_reader :max_size
+  attr_reader :max_size, :queue
 
   def initialize(max_size = 0, &block)
     @create_block = block
@@ -50,6 +57,16 @@ class ConnectionQueue
   alias pop poll
 
   ##
+  # Removes an idle connection from the queue
+  # synchronously.
+  #
+  def delete(element)
+    synchronize do
+      @queue.delete element
+    end
+  end
+
+  ##
   # Returns the total available connections to be used. This
   # takes into account the number of connections that can be
   # created as well. So it is all connections that can be used
@@ -77,14 +94,22 @@ class ConnectionQueue
   end
 
   def get_connection
-    @queue.pop
+    conn = @queue.pop
+    conn.last[:last_used_at] = Time.now.utc
+    conn
   end
 
   def create_connection
     return unless @created < @max_size
 
     conn = @create_block.call
+    # TODO: add more stats.
+    stats = {
+      id: @created,
+      alive_since: Time.now.utc,
+      last_used_at: Time.now.utc
+    }
     @created += 1
-    conn
+    [conn, stats]
   end
 end
