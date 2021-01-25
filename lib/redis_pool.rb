@@ -72,9 +72,14 @@ class RedisPool
   end
 
   def stats(pretty_print = false)
-    @available.queue.each do |conn|
-      puts conn.last
+    conn_stats = @available.queue.map do |conn|
+      conn.last
     end
+    pool_stats = {
+      available_to_create: @available.available_to_create,
+      total_available: @available.total_available,
+      connections_stats: conn_stats
+    }
   end
 
   private
