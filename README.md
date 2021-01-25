@@ -17,7 +17,7 @@ You can set several options for the pool. i.e:
 
 Use the connections using `with_conn`:
 ```ruby
-pool = RedisPool.new()
+pool = RedisPool.new({max_size: 10, connection_timeout: 5, idle_timeout: 300})
 pool.with_conn { |conn|
     conn.get('hello')
 }
@@ -35,4 +35,9 @@ You can also get stats about all connections that are currently alive in the poo
 pool = RedisPool.new()
 pool.with_conn { |conn| conn.get('hello') }
 pool.stats # {:available_to_create=>4, :total_available=>5, :connections_stats=>[{:id=>0, :alive_since=>2021-01-25 13:41:12.749529574 UTC, :last_used_at=>2021-01-25 13:41:12.749532585 UTC}]}
+```
+## Redis Configuration
+You can specify custom redis configuration when initializing the pool.
+```ruby
+pool = RedisPool.new(redis_config: {host: 'localhost', port: 5000, db: 10})
 ```
