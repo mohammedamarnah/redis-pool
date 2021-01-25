@@ -1,4 +1,4 @@
-# redis_pool
+# redis_pool [![Build Status][gh-actions-image]][gh-actions-link]
 A simple redis dynamic-sized connection pool.
 There are several implementations of connection pools in ruby, but none of them supports dynamic sizes. Any connection pool would open a static amount of connections and would never kill them even if they are idle and not being used.
 What if you need a large number of connections in very rare cases, but normally will not use more than a couple of ones? This pool is a great choice!
@@ -41,3 +41,5 @@ You can specify custom redis configuration when initializing the pool.
 ```ruby
 pool = RedisPool.new(redis_config: {host: 'localhost', port: 5000, db: 10})
 ```
+[gh-actions-image]: https://github.com/mohammedamarnah/redis-pool/workflows/Ruby/badge.svg
+[gh-actions-link]:  https://github.com/mohammedamarnah/redis-pool/actions
