@@ -1,8 +1,18 @@
-# redis_pool [![Build Status][gh-actions-image]][gh-actions-link]
+# redis-pool [![Build Status][gh-actions-image]][gh-actions-link]
 A simple redis dynamic-sized connection pool.
 There are several implementations of connection pools in ruby, but none of them supports dynamic sizes. Any connection pool would open a static amount of connections and would never kill them even if they are idle and not being used.
 What if you need a large number of connections in very rare cases, but normally will not use more than a couple of ones? This pool is a great choice!
 
+## Why redis-pool?
+Imagine that you have an application that in very rare cases (let's say X minutes-hours per day) gets a huge amount of traffic that needs a high number of connections, but all the other times you would need only a couple of ones open. Having a big amount of connections open (while the connections are idle) is a memory consuming operations.
+I took inspiration from where I work: we have **N servers**, each server instantiates **M puma instances** (ruby on rails server) and each instance fires up **K redis connections** on boot-up. This makes the total open connections **N x M x K redis connections**!. Imagine adding one instance? or one server!
+This gem was implemented heavily based on two main implementations:
+1- [mperham's connection_pool](https://github.com/mperham/connection_pool)
+2- [rails' active record connection pool](https://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/ConnectionPool.html)
+The former provides an efficient connection pool implementation that creates connections lazily (only upon actual need of that connection), but keeps the connections alive once they're opened.
+The latter provides a connection pool implementation (specific for rails' database interfaces) that supports a dynamic size of the connection pool.
+Here's a chart that shows the difference between normal connection-pools and redis-pool:
+![difference](https://user-images.githubusercontent.com/11768502/106142062-ae693680-6179-11eb-9b40-4fa32d641904.jpeg)
 ## Usage
 Easily create a pool:
 ```ruby
