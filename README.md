@@ -14,10 +14,9 @@ This gem was implemented heavily based on two main implementations:
 
 2- [rails' ActiveRecord Connection Pool](https://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/ConnectionPool.html)
 
-The former provides an efficient connection pool implementation that creates connections lazily (only upon actual need of that connection), but keeps the connections alive once they're opened.
+The former provides an efficient connection pool implementation that creates connections lazily (only upon actual need of that connection), but keeps the connections alive once they're opened. The latter provides a connection pool implementation (specific for rails' database interfaces) that supports a dynamic size of the connection pool. This gem is a combination of the perks of the two, combines the lazy evaluation with idle-connection killing support.
 
-The latter provides a connection pool implementation (specific for rails' database interfaces) that supports a dynamic size of the connection pool.
-Here's a chart that shows the difference between normal connection-pools and redis-pool:
+Here's the difference between normal connection-pools and redis-pool shown in a simple graph:
 ![difference](https://user-images.githubusercontent.com/11768502/106142062-ae693680-6179-11eb-9b40-4fa32d641904.jpeg)
 ## Usage
 Easily create a pool:
