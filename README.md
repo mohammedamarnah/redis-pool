@@ -6,7 +6,7 @@ What if you need a large number of connections in very rare cases, but normally 
 ## Why redis-pool?
 Imagine that you have an application that in very rare cases (let's say X minutes-hours per day) gets a huge amount of traffic that needs a high number of connections, but all the other times you would need only a couple of ones open. Having a big amount of connections open (while the connections are idle) is a memory consuming operations.
 
-I took inspiration from where I work: we have **N servers**, each server instantiates **M puma instances** (ruby on rails server) and each instance fires up **K redis connections** on boot-up. This makes the total open connections **N x M x K redis connections**!. Imagine adding one instance? or one server!
+I took inspiration from where I work: we have **N servers**, each server instantiates **M puma instances** (ruby on rails server) and each instance fires up **K redis connections** on boot-up. This makes the total open connections **N x M x K redis connections**! Imagine adding one instance? or one server!
 
 This gem was implemented heavily based on two main implementations:
 
