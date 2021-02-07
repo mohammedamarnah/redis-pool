@@ -14,20 +14,15 @@ class ConnectionQueue
   def initialize(max_size = 0, &block)
     @create_block = block
     @created = 0
-    @queue = []
+    @queue = Queue.new
     @max_size = max_size
-    @lock = Monitor.new
-    @lock_cond = @lock.new_cond
   end
 
   ##
   # Adds (or returns) a connection to the available queue, synchronously.
   #
   def add(element)
-    synchronize do
-      @queue.push element
-      @lock_cond.signal
-    end
+    @queue.push element
   end
   alias << add
   alias push add
@@ -40,18 +35,14 @@ class ConnectionQueue
   def poll(timeout = 5)
     t0 = Concurrent.monotonic_time
     elapsed = 0
-    synchronize do
-      loop do
-        return get_connection if connection_available?
+    loop do
+      return get_connection if connection_available?
 
-        connection = create_connection
-        return connection if connection
+      connection = create_connection
+      return connection if connection
 
-        elapsed = Concurrent.monotonic_time - t0
-        raise TimeoutError, 'could not obtain connection' if elapsed >= timeout
-
-        @lock_cond.wait(timeout - elapsed)
-      end
+      elapsed = Concurrent.monotonic_time - t0
+      raise TimeoutError, 'could not obtain connection' if elapsed >= timeout
     end
   end
   alias pop poll
@@ -61,9 +52,12 @@ class ConnectionQueue
   # synchronously.
   #
   def delete(element)
-    synchronize do
-      @queue.delete element
+    new_queue = Queue.new
+    while !@queue.empty
+      current = @queue.pop(non_block=true)
+      new_queue << current if current != element
     end
+    @queue = new_queue
   end
 
   ##
@@ -84,10 +78,6 @@ class ConnectionQueue
   end
 
   private
-
-  def synchronize(&block)
-    @lock.synchronize(&block)
-  end
 
   def connection_available?
     !@queue.empty?
