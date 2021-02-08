@@ -20,7 +20,7 @@ jobs:
     - name: Redis Server in GitHub Actions
       uses: supercharge/redis-github-action@1.1.0
       with:
-        redis-version: 6.0.x
+        redis-version: 6.0.7
     - name: Build and test with Rake
       run: |
         gem install bundler
