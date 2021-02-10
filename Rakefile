@@ -1,4 +1,5 @@
 require 'rubocop/rake_task'
+require 'rake/testtask'
 
 task default: %w[lint test]
 
@@ -7,11 +8,7 @@ RuboCop::RakeTask.new(:lint) do |task|
   task.fail_on_error = false
 end
 
-task :run do
-  ruby 'lib/redis_pool.rb'
+Rake::TestTask.new do |task|
+  task.test_files = FileList['test/**/*.rb']
 end
 
-task :test do
-  ruby 'test/connection_queue_test.rb'
-  ruby 'test/redis_pool_test.rb'
-end

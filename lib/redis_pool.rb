@@ -83,3 +83,6 @@ class RedisPool
     -> { Redis.new(@redis_config) }
   end
 end
+
+require 'redis_pool/connection_queue'
+require 'redis_pool/reaper'
