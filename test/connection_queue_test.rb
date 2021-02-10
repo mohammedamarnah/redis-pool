@@ -10,17 +10,17 @@ class ConnectionQueueTest < Minitest::Test
   def test_basic_initialization
     max_size = 5
     q = ConnectionQueue.new(max_size, &redis_block)
-    assert_equal q.max_size, max_size
-    assert_equal q.total_available, max_size
-    assert_equal q.available_to_create, max_size
+    assert_equal max_size, q.max_size
+    assert_equal max_size, q.total_available
+    assert_equal max_size, q.available_to_create
   end
 
   def test_checking_out_a_connection
     max_size = 5
     q = ConnectionQueue.new(max_size, &redis_block)
     q.poll
-    assert_equal q.total_available, max_size - 1
-    assert_equal q.available_to_create, max_size - 1
+    assert_equal max_size - 1, q.total_available
+    assert_equal max_size - 1, q.available_to_create
   end
 
   def test_checking_in_a_connection
@@ -28,8 +28,8 @@ class ConnectionQueueTest < Minitest::Test
     q = ConnectionQueue.new(max_size, &redis_block)
     conn = q.poll
     q.add conn
-    assert_equal q.total_available, max_size
-    assert_equal q.available_to_create, max_size - 1
+    assert_equal max_size, q.total_available
+    assert_equal max_size - 1, q.available_to_create
   end
 
   def test_checking_out_with_timeout
@@ -47,7 +47,7 @@ class ConnectionQueueTest < Minitest::Test
     conn = q.poll
     q.add conn
     q.poll 0
-    assert_equal q.total_available, 0
-    assert_equal q.available_to_create, 0
+    assert_equal 0, q.total_available
+    assert_equal 0, q.available_to_create
   end
 end

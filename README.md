@@ -23,7 +23,7 @@ Easily create a pool:
 ```ruby
 pool = RedisPool.new()
 # You can set the maximum size of the pool
-pool = RedisPool.new({max_size: 10})
+pool = RedisPool.new(max_size: 10)
 ```
 You can set several options for the pool. i.e:
 `connection_timeout`: raises a TimeoutError after `connection_timeout` of trying to get hold of a connection.
@@ -32,7 +32,7 @@ You can set several options for the pool. i.e:
 
 Use the connections using `with_conn`:
 ```ruby
-pool = RedisPool.new({max_size: 10, connection_timeout: 5, idle_timeout: 300})
+pool = RedisPool.new(max_size: 10, connection_timeout: 5, idle_timeout: 300)
 pool.with_conn { |conn|
     conn.get('hello')
 }

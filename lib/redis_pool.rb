@@ -3,27 +3,18 @@ require_relative './redis_pool/connection_queue'
 require_relative './redis_pool/reaper'
 
 class RedisPool
-  DEFAULT_POOL_OPTS = {
-    max_size: 5,
-    connection_timeout: 5,
-    idle_timeout: 100,
-    reaping_frequency: 300,
-  }.freeze
-
   DEFAULT_REDIS_CONFIG = { host: 'localhost', port: 6379 }.freeze
 
   attr_reader :max_size, :connection_timeout, :idle_timeout,
               :reaping_frequency, :available
 
-  def initialize(options = {}, redis_config = {})
-    options = DEFAULT_POOL_OPTS.merge(options)
-
+  def initialize(max_size: 5, connection_timeout: 5, idle_timeout: 100, reaping_frequency: 300, redis_config: {})
     @redis_config = DEFAULT_REDIS_CONFIG.merge(redis_config)
 
-    @max_size = options[:max_size]
-    @connection_timeout = options[:connection_timeout]
-    @idle_timeout = options[:idle_timeout]
-    @reaping_frequency = options[:reaping_frequency]
+    @max_size = max_size
+    @connection_timeout = connection_timeout
+    @idle_timeout = idle_timeout
+    @reaping_frequency = reaping_frequency
 
     @available = ConnectionQueue.new(@max_size, &redis_creation_block)
     @reaper = Reaper.new(self, @reaping_frequency, @idle_timeout)
@@ -71,7 +62,7 @@ class RedisPool
     end
   end
 
-  def stats(pretty_print = false)
+  def stats
     conn_stats = @available.queue.map do |conn|
       conn.last
     end
