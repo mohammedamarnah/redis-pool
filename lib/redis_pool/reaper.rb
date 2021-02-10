@@ -28,6 +28,6 @@ class Reaper
         end
         sleep @frequency
       end
-    end.run
+    end
   end
 end
