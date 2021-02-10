@@ -1,6 +1,6 @@
 require 'redis'
-require './redis_pool/connection_queue'
-require './redis_pool/reaper'
+require 'redis_pool/connection_queue'
+require 'redis_pool/reaper'
 
 class RedisPool
   DEFAULT_REDIS_CONFIG = { host: 'localhost', port: 6379 }.freeze
