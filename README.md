@@ -21,6 +21,10 @@ Here's the difference between normal connection-pools and redis-pool shown in a 
 ## Installation
 Install the gem using the `gem install` command or add it to your Gemfile and run `bundle install`
 ```
+# bundler install: add this to your Gemfile
+gem 'redis_dynamic'
+
+# manual install
 gem install redis_dynamic
 ```
 ## Usage
