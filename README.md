@@ -18,6 +18,11 @@ The former provides an efficient connection pool implementation that creates con
 
 Here's the difference between normal connection-pools and redis-pool shown in a simple graph:
 ![difference](https://user-images.githubusercontent.com/11768502/106142062-ae693680-6179-11eb-9b40-4fa32d641904.jpeg)
+## Installation
+Install the gem using the `gem install` command or add it to your Gemfile and run `bundle install`
+```
+gem install redis_dynamic
+```
 ## Usage
 Easily create a pool:
 ```ruby

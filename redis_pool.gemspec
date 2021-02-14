@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.name = 'redis_pool'
+  s.name = 'redis_dynamic'
   s.version = '0.1.0'
   s.summary = 'Redis Dynamic Pool'
   s.description = 'A simple dynamic-sized redis connection pool.'
